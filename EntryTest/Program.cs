@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Test1
 {
@@ -8,13 +9,21 @@ namespace Test1
 		static void Main(string[] args)
 		{
 			// values generating
-			int l = 1_000_000;
+			int l = 10_000_000;
 			var rand = new Random(64);
 
 			var values = new int[l];
 			for (int i = 0; i < l; i++)
 			{
-				values[i] = rand.Next(int.MinValue, int.MaxValue);
+				values[i] = rand.Next();
+			}
+
+			// using LINQ
+			var vals = values.AsParallel().GroupBy(n => n).Where(group => group.Count() >= 2).ToArray();
+			Console.WriteLine("Linq:");
+			foreach (var item in vals)
+			{
+				Console.WriteLine($"Item -> {item.Key}");
 			}
 
 			// using Dictionary/HashTable to remember if number occured
