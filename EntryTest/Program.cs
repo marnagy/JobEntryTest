@@ -9,7 +9,7 @@ namespace Test1
 		static void Main(string[] args)
 		{
 			// values generating
-			int l = 10_000_000;
+			int l = 1_000_000;
 			var rand = new Random(64);
 
 			var values = new int[l];

@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 
 namespace Test2
 {
@@ -22,6 +23,7 @@ namespace Test2
 				while (true)
 				{
 					nextPageURI = LoadVehicles(nextPageURI, client, vehicles);
+					//nextPageURI = LoadVehiclesAsync(nextPageURI, client, vehicles).Result;
 					if (nextPageURI == null)
 					{
 						break;
@@ -51,6 +53,28 @@ namespace Test2
 				Console.WriteLine($"Filtered vehicles: {filteredVehicles.Count}");
 			}  
 		}
+		async static Task<string> LoadVehiclesAsync(string URI, WebClient client, List<Vehicle> res)
+		{
+			var jsonResp = client.DownloadString(URI);
+			var options = new JsonSerializerOptions(){
+				WriteIndented = true
+			};
+
+			var jsonElement = JsonSerializer.Deserialize<JsonElement>(jsonResp);
+			var nextPageProp = jsonElement.GetProperty("next");
+			//var countProp = jsonElement.GetProperty("count");
+			var resultsProp = jsonElement.GetProperty("results");
+
+			string nextPageURI = nextPageProp.GetString();
+
+			foreach (var item in resultsProp.EnumerateArray())
+			{
+				var vehicle = await Vehicle.FromJsonAsync(item, client);
+				res.Add( vehicle );
+			}
+
+			return nextPageURI;
+		}
 		static string LoadVehicles(string URI, WebClient client, List<Vehicle> res)
 		{
 			var jsonResp = client.DownloadString(URI);
@@ -67,7 +91,8 @@ namespace Test2
 
 			foreach (var item in resultsProp.EnumerateArray())
 			{
-				res.Add( Vehicle.FromJson(item, client) );
+				var vehicle = Vehicle.FromJson(item, client);
+				res.Add( vehicle );
 			}
 
 			return nextPageURI;

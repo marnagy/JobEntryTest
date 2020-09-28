@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace Test2
 {
@@ -23,6 +24,20 @@ namespace Test2
 			HomePlanet = homePlanet;
 		}
 
+		internal async static Task<Person> FromJsonURIAsync(string URI, WebClient client)
+		{
+			var jsonResp = client.DownloadString(URI);
+			var options = new JsonSerializerOptions(){
+				WriteIndented = true
+			};
+
+			var jsonPersonElem = JsonSerializer.Deserialize<JsonElement>(jsonResp);
+			var nameProp = jsonPersonElem.GetProperty("name");
+			string name = nameProp.GetString();
+			var planetProp = jsonPersonElem.GetProperty("homeworld");
+			var homePlanet = await Planet.FromJsonURIAsync(planetProp.GetString(), client);
+			return new Person(name, homePlanet);
+		}
 		internal static Person FromJsonURI(string URI, WebClient client)
 		{
 			var jsonResp = client.DownloadString(URI);
@@ -34,7 +49,7 @@ namespace Test2
 			var nameProp = jsonPersonElem.GetProperty("name");
 			string name = nameProp.GetString();
 			var planetProp = jsonPersonElem.GetProperty("homeworld");
-			Planet homePlanet = Planet.FromJsonURI(planetProp.GetString(), client);
+			var homePlanet = Planet.FromJsonURI(planetProp.GetString(), client);
 			return new Person(name, homePlanet);
 		}
 	}

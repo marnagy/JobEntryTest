@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Test2
 {
@@ -26,6 +28,19 @@ namespace Test2
 			Pilots = pilots;
 		}
 
+		public async static Task<Vehicle> FromJsonAsync(JsonElement elem, WebClient client)
+		{
+			var nameProp = elem.GetProperty("name");
+			var name = nameProp.GetString();
+			var pilotsProp = elem.GetProperty("pilots");
+			var pilots = new List<Person>();
+			foreach (var pilotURI in pilotsProp.EnumerateArray())
+			{
+				var person = await Person.FromJsonURIAsync(pilotURI.GetString(), client);
+				pilots.Add( person );
+			}
+			return new Vehicle(name, pilots.ToArray());
+		}
 		public static Vehicle FromJson(JsonElement elem, WebClient client)
 		{
 			var nameProp = elem.GetProperty("name");
@@ -34,7 +49,8 @@ namespace Test2
 			var pilots = new List<Person>();
 			foreach (var pilotURI in pilotsProp.EnumerateArray())
 			{
-				pilots.Add(Person.FromJsonURI(pilotURI.GetString(), client));
+				var person = Person.FromJsonURI(pilotURI.GetString(), client);
+				pilots.Add( person );
 			}
 			return new Vehicle(name, pilots.ToArray());
 		}
